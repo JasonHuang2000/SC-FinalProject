@@ -82,21 +82,21 @@ def get_note_level_pitch(notes):
         total= 0
 
         # median method
-        # v_note = []
+        v_note = []
 
         for i in range(len(note.frame_pitch)):
             if note.frame_pitch[i] > 0:
                 voiced_note= voiced_note+ 1
-                total= total+ note.frame_pitch[i]
+                # total= total+ note.frame_pitch[i]
 
-                # v_note.append(note.frame_pitch[i])
+                v_note.append(note.frame_pitch[i])
 
         if voiced_note == 0:
             note.pitch= 0
         else:
-            note.pitch= round( total / float(voiced_note) ) #comment this to use median method
+            # note.pitch= round( total / float(voiced_note) ) #comment this to use median method
 
-            # note.pitch = round(median(v_note))
+            note.pitch = round(median(v_note))
 
     return notes
 
