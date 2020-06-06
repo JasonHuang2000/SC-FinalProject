@@ -1,7 +1,7 @@
 # SC_FinalProject
 Repo for final project of the course Scientific Computing.
 
-## The Score of sp.py
+## Best Score of sp.py
 
 COn = 0.312
 
