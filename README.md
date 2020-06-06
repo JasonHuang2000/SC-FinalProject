@@ -1,5 +1,6 @@
-# SC_FinalProject
-Repo for final project of the course Scientific Computing.
+### Notice
+
+If you want to use sp_official.py to generate the answer format, please put the data-set, AIcup_testset_ok, at the same folder of sp_official.py.
 
 ## Best Score of sp.py
 
