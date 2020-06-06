@@ -26,7 +26,7 @@ def get_onset(feature_path):
     time = feature['time']
 
     # value for prominence
-    p = 0.02425 #high score : 0.245 w/ 0.02425
+    p = 0.016 #high score : 0.245 w/ 0.02425
 
     # values for height
     h = 0.02288 #high score : 0.266 w/ 0.02288
