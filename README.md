@@ -5,11 +5,11 @@ Repo for final project of the course Scientific Computing.
 
 COn = 0.312
 
-COnP = 0.189 
+COnP = 0.205 
 
-COnPOff = 0.045 
+COnPOff = 0.050 
 
-Final Score = 0.185
+Final Score = 0.196
 
 
 ## The Score of example.py
