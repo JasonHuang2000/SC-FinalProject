@@ -34,8 +34,8 @@ def get_onset(feature_path):
     
     # high score : 0.269 w/ p = 0.016 and h = 0.02288
 
-    print(p)
-    print(h)
+    # print(p)
+    # print(h)
     # print(low)
 
     peaks, _ = find_peaks(spectral_flux, height = h, prominence = p) #use prominence= or height= or both
@@ -114,15 +114,8 @@ def get_offset(notes):
 
     return notes
 
-def notes2txt(notes, filename):
-    with open(filename, 'w') as file:
-        for note in notes:
-            if note.pitch != 0:
-                file.write("%f %f %d\n" %(note.onset_time, note.offset_time, note.pitch))
-    return
 
-def main(ep_path, output_path, feature_path):
-    print ("start processing time: %f" %(time.time()))
+def main(ep_path, feature_path):
     
     ep_frames = json.load(open(ep_path))
 
@@ -132,13 +125,22 @@ def main(ep_path, output_path, feature_path):
     notes = get_note_level_pitch(notes)
     notes = get_offset(notes)
 
-    notes2txt(notes, output_path)
+    answer = []
+    for note in notes:
+        if note.pitch > 5:
+            answer.append([note.onset_time, note.offset_time, note.pitch])
+    
+    return answer 
 
-    print ("end processing time: %f" %(time.time()))
 
 if __name__ == '__main__':
 
-    ep_path= "1_vocal.json"
-    output_path= "test.txt"
-    feature_path= "1_feature.json"
-    main(ep_path=ep_path, output_path=output_path, feature_path=feature_path)
+    AnswerDict = {}
+    for i in range(1, 1501):
+        ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
+        feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
+        ans = main(ep_path=ep_path, feature_path=feature_path)
+        AnswerDict[str(i)] = ans
+
+    print(json.dumps(AnswerDict))
+    AnswerDict.clear()
