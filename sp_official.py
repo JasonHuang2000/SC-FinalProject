@@ -127,12 +127,20 @@ def main(ep_path, feature_path):
 
     answer = []
     for note in notes:
-        if note.pitch > 5 and note.onset_time != note.offset_time:
-            print(note.onset_time, note.offset_time, note.pitch, sep=' ')
+        if note.pitch > 5:
+            answer.append([note.onset_time, note.offset_time, note.pitch])
+    
+    return answer 
 
 
 if __name__ == '__main__':
 
-    ep_path= sys.argv[1]
-    feature_path= sys.argv[2]
-    main(ep_path=ep_path, feature_path=feature_path)
+    AnswerDict = {}
+    for i in range(1, 1501):
+        ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
+        feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
+        ans = main(ep_path=ep_path, feature_path=feature_path)
+        AnswerDict[str(i)] = ans
+
+    print(json.dumps(AnswerDict))
+    AnswerDict.clear()
