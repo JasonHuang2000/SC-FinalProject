@@ -13,15 +13,17 @@ from scipy.signal import find_peaks
 from statistics import median
 
 class Note:
-    def __init__(self, frame, frame_pitch, onset_time, offset_time):
+    def __init__(self, frame, frame_pitch, onset_time, offset_time, onset_idx):
         self.frame_pitch = frame_pitch
         self.frame = frame
         self.onset_time = onset_time
         self.offset_time = offset_time
+        self.onset_idx = onset_idx
         self.pitch = 0
+        self.offset_idx = 0
 
-def get_onset(feature_path):
-    feature = json.load(open(feature_path))
+
+def get_onset(feature):
     spectral_flux = feature['spectral_flux']
     time = feature['time']
 
@@ -41,13 +43,15 @@ def get_onset(feature_path):
     peaks, _ = find_peaks(spectral_flux, height = h, prominence = p) #use prominence= or height= or both
 
     onset_times = []
+    onset_idxs = []
     for i in range(len(peaks)):
         onset_times.append(time[peaks[i]])
+        onset_idxs.append(peaks[i])
 
-    return onset_times
+    return onset_times, onset_idxs
 
 
-def generate_notes(onset_times, ep_frames):
+def generate_notes(onset_times, onset_idxs, ep_frames):
     notes = []
     onset_num = 0
     cur_frame = []
@@ -58,7 +62,7 @@ def generate_notes(onset_times, ep_frames):
         if (onset_num+ 1) < len(onset_times) and time > (onset_times[onset_num+ 1]- 0.016):
 
             note= Note(frame= cur_frame, frame_pitch= cur_pitch, onset_time= onset_times[onset_num]
-                , offset_time= onset_times[onset_num+ 1])
+                , offset_time= onset_times[onset_num+ 1], onset_idx = onset_idxs[onset_num])
             notes.append(note)
             
             cur_frame= []
@@ -71,7 +75,7 @@ def generate_notes(onset_times, ep_frames):
 
     if cur_frame != []:
         note= Note(frame= cur_frame, frame_pitch= cur_pitch, onset_time= onset_times[onset_num]
-            , offset_time= cur_frame[-1])
+            , offset_time= cur_frame[-1], onset_idx = onset_idxs[onset_num])
         notes.append(note)
         
     return notes
@@ -100,30 +104,53 @@ def get_note_level_pitch(notes):
 
     return notes
 
-def get_offset(notes):
+def get_offset(notes, feature):
+
+    # for note in notes:
+        # if note.pitch != 0:
+
+            # for i in range(len(note.frame_pitch)):
+            #     if note.frame_pitch[i] > 0:
+            #         offset= i
+            
+            # if offset > 2:
+                # note.offset_time= note.frame[offset]
+
+    # spectral_entropy offset-method
+    s_etp = feature["spectral_entropy"]
 
     for note in notes:
-        if note.pitch != 0:
-            offset= 0
-            for i in range(len(note.frame_pitch)):
-                if note.frame_pitch[i] > 0:
-                    offset= i
-            
-            if offset > 2:
-                note.offset_time= note.frame[offset]
+        offset = 0
+        for i in range(note.onset_idx, note.onset_idx+len(note.frame_pitch)-1):
+            if s_etp[i] >= 0.65:
+                break
+            offset += 1
+
+        if offset > 2:
+            note.offset_time= note.frame[offset]
+            note.offset_idx = offset
 
     return notes
 
+def get_pitch_after_offset(notes):
+    for note in notes:
+        v_notes = [note.frame_pitch[i] for i in range(note.offset_idx)]
+        if len(v_notes) > 0:
+            note.pitch = round(median(v_notes)) 
+
+    return notes
 
 def main(ep_path, feature_path):
     
     ep_frames = json.load(open(ep_path))
+    feature = json.load(open(feature_path))
 
-    onset_times = get_onset(feature_path)
+    onset_times, onset_idxs = get_onset(feature)
 
-    notes = generate_notes(onset_times, ep_frames)
-    notes = get_note_level_pitch(notes)
-    notes = get_offset(notes)
+    notes = generate_notes(onset_times, onset_idxs, ep_frames)
+    # notes = get_note_level_pitch(notes)
+    notes = get_offset(notes, feature)
+    notes = get_pitch_after_offset(notes)
 
     answer = []
     for note in notes:
