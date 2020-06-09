@@ -18,7 +18,7 @@ def readgt(gt_fp):
 def main(features, gt_onset, gt_offset, gt_pitch):
 
     start = int(int(sys.argv[2])/0.032)
-    end = start + 200
+    end = start + 150
 
     fig, ax1 = plt.subplots(figsize=(12.5,6))
 
@@ -78,14 +78,14 @@ def main(features, gt_onset, gt_offset, gt_pitch):
         ax5.plot(time[start:end], energy_entp[start:end], color=color)
         ax5.tick_params(axis='y', labelcolor=color)
 
-    # onset = ax1.twinx()
-    # for t in gt_onset:
-    #     if t >= time[end]:
-    #         break
-    #     if t > time[start]:
-    #         onset.vlines(t, 0, 1, linestyles='dashed')
+    onset = ax1.twinx()
+    for t in gt_onset:
+        if t >= time[end]:
+            break
+        if t > time[start]:
+            onset.vlines(t, 0, 1, linestyles='dashed')
 
-    # onset.set_yticklabels([])
+    onset.set_yticklabels([])
 
     fig.tight_layout()
     plt.show()
@@ -93,12 +93,12 @@ def main(features, gt_onset, gt_offset, gt_pitch):
 
 if __name__ == "__main__":
     # train-set
-    # features = json.load(open("MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"))
-    # gt_fp = open("MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_groundtruth.txt")
-    # gt_onset, gt_offset, gt_pitch = readgt(gt_fp)
+    features = json.load(open("MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"))
+    gt_fp = open("MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_groundtruth.txt")
+    gt_onset, gt_offset, gt_pitch = readgt(gt_fp)
     # test set
-    features = json.load(open("AIcup_testset_ok/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"))
-    gt_onset = []
-    gt_offset = []
-    gt_pitch = []
+    # features = json.load(open("AIcup_testset_ok/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"))
+    # gt_onset = []
+    # gt_offset = []
+    # gt_pitch = []
     main(features, gt_onset, gt_offset, gt_pitch)

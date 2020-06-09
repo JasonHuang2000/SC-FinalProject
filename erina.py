@@ -12,6 +12,9 @@ from scipy import signal
 from scipy.signal import find_peaks
 from statistics import median
 
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 class Note:
     def __init__(self, frame, frame_pitch, onset_time, offset_time, onset_idx):
         self.frame_pitch = frame_pitch
@@ -41,25 +44,23 @@ def get_onset(feature):
     # print(h)
     # print(low)
 
-    sf_peaks, _ = find_peaks(spectral_flux, height=h, prominence=p) #use prominence= or height= or both
-    ee_peaks, _ = find_peaks(-energy_entp, height=-3.0, prominence=0.2) 
+    # sf_peaks, _ = find_peaks(spectral_flux, height=h, prominence=p) #use prominence= or height= or both
+    peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.2) 
 
-    peaks = []
-    for sf in sf_peaks:
-        peaks.append(sf)
-    for ee in ee_peaks:
-        peaks.append(ee)    
-
-    peaks.sort()
-    # print(peaks)
+    # peaks = []
+    # for sf in sf_peaks:
+    #     peaks.append(sf)
+    # for ee in ee_peaks:
+    #     peaks.append(ee)    
+    # peaks.sort()
     
-    for i in range(len(peaks)-1):
-        if i >=  len(peaks) - 1:
-            break
-        if peaks[i+1] - peaks[i] <= 3:
-            peaks[i] = (peaks[i] + peaks[i+1])/2
-            peaks.remove(peaks[i+1])
-            i -= 1
+    # for i in range(len(peaks)-1):
+    #     if i >=  len(peaks) - 1:
+    #         break
+    #     if peaks[i+1] - peaks[i] <= 3:
+    #         peaks[i] = (peaks[i] + peaks[i+1])/2
+    #         peaks.remove(peaks[i+1])
+    #         i -= 1
 
     onset_times = []
     onset_idxs = []
@@ -182,20 +183,20 @@ def main(ep_path, feature_path):
 if __name__ == '__main__':
 
     # for testing
-    # ep_path= sys.argv[1]
-    # feature_path= sys.argv[2]
-    # answer = main(ep_path=ep_path, feature_path=feature_path)
-    # for note in answer:
-    #     print(note[0], note[1], note[2], sep=' ')
+    ep_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_vocal.json"
+    feature_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"
+    answer = main(ep_path=ep_path, feature_path=feature_path)
+    for note in answer:
+        print(note[0], note[1], note[2], sep=' ')
     
     # for generate answer
-    AnswerDict = {}
-    for i in range(1, 1501):
-        ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
-        feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
-        ans = main(ep_path=ep_path, feature_path=feature_path)
-        AnswerDict[str(i)] = ans
+    # AnswerDict = {}
+    # for i in range(1, 1501):
+    #     ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
+    #     feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
+    #     ans = main(ep_path=ep_path, feature_path=feature_path)
+    #     AnswerDict[str(i)] = ans
 
-    print(json.dumps(AnswerDict))
-    AnswerDict.clear()
+    # print(json.dumps(AnswerDict))
+    # AnswerDict.clear()
 
