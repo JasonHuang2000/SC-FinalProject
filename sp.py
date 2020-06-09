@@ -26,6 +26,7 @@ class Note:
 def get_onset(feature):
     spectral_flux = feature['spectral_flux']
     time = feature['time']
+    energy_entp = np.array(feature['energy_entropy'])
 
     # value for prominence
     p = 0.016 #high score : 0.245 w/ 0.02425
@@ -40,7 +41,8 @@ def get_onset(feature):
     # print(h)
     # print(low)
 
-    peaks, _ = find_peaks(spectral_flux, height = h, prominence = p) #use prominence= or height= or both
+    # sf_peaks, _ = find_peaks(spectral_flux, height=h, prominence=p, distance=3) #use prominence= or height= or both
+    peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.2, distance=5) 
 
     onset_times = []
     onset_idxs = []
@@ -155,11 +157,28 @@ def main(ep_path, feature_path):
     answer = []
     for note in notes:
         if note.pitch > 0 and note.onset_time != note.offset_time:
-            print(note.onset_time, note.offset_time, note.pitch, sep=' ')
+            answer.append([note.onset_time, note.offset_time, note.pitch])
+
+    return answer
 
 
 if __name__ == '__main__':
 
+    # for testing
     ep_path= sys.argv[1]
     feature_path= sys.argv[2]
-    main(ep_path=ep_path, feature_path=feature_path)
+    answer = main(ep_path=ep_path, feature_path=feature_path)
+    for note in answer:
+        print(note[0], note[1], note[2], sep=' ')
+    
+    # for generate answer
+    # AnswerDict = {}
+    # for i in range(1, 1501):
+    #     ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
+    #     feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
+    #     ans = main(ep_path=ep_path, feature_path=feature_path)
+    #     AnswerDict[str(i)] = ans
+
+    # print(json.dumps(AnswerDict))
+    # AnswerDict.clear()
+
