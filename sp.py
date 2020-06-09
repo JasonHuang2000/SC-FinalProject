@@ -122,7 +122,7 @@ def get_offset(notes, feature):
     for note in notes:
         offset = 0
         for i in range(note.onset_idx, note.onset_idx+len(note.frame_pitch)-1):
-            if s_etp[i] >= 0.65:
+            if i > 5 and s_etp[i] >= 0.65:
                 break
             offset += 1
 
