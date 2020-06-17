@@ -45,7 +45,8 @@ def get_onset(feature):
     # print(low)
 
     # sf_peaks, _ = find_peaks(spectral_flux, height=h, prominence=p) #use prominence= or height= or both
-    peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.2) 
+    # peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.2) 
+    peaks, _ = find_peaks(-energy_entp, height=-3.3, prominence=0.1, distance=3) 
 
     # peaks = []
     # for sf in sf_peaks:
@@ -64,9 +65,14 @@ def get_onset(feature):
 
     onset_times = []
     onset_idxs = []
+    delta = 2
     for i in range(len(peaks)):
-        onset_times.append(time[int(peaks[i])])
-        onset_idxs.append(int(peaks[i]))
+        if int(peaks[i])+delta >= 0 and int(peaks[i])+delta < len(time):
+            onset_times.append(time[int(peaks[i])+delta])
+            onset_idxs.append(int(peaks[i]+delta))
+        else:
+            onset_times.append(time[int(peaks[i])])
+            onset_idxs.append(int(peaks[i]))
 
     return onset_times, onset_idxs
 
@@ -183,20 +189,20 @@ def main(ep_path, feature_path):
 if __name__ == '__main__':
 
     # for testing
-    ep_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_vocal.json"
-    feature_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"
-    answer = main(ep_path=ep_path, feature_path=feature_path)
-    for note in answer:
-        print(note[0], note[1], note[2], sep=' ')
+    # ep_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_vocal.json"
+    # feature_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"
+    # answer = main(ep_path=ep_path, feature_path=feature_path)
+    # for note in answer:
+    #     print(note[0], note[1], note[2], sep=' ')
     
     # for generate answer
-    # AnswerDict = {}
-    # for i in range(1, 1501):
-    #     ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
-    #     feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
-    #     ans = main(ep_path=ep_path, feature_path=feature_path)
-    #     AnswerDict[str(i)] = ans
+    AnswerDict = {}
+    for i in range(1, 1501):
+        ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
+        feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
+        ans = main(ep_path=ep_path, feature_path=feature_path)
+        AnswerDict[str(i)] = ans
 
-    # print(json.dumps(AnswerDict))
-    # AnswerDict.clear()
+    print(json.dumps(AnswerDict))
+    AnswerDict.clear()
 
