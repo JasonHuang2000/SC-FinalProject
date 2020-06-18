@@ -30,49 +30,76 @@ def get_onset(feature):
     time = feature['time']
     spectral_flux = np.array(feature['spectral_flux'])
     energy_entp = np.array(feature['energy_entropy'])
+    v_pitch = feature['vocal_pitch']
 
+    # vp-method
+    vp_delta1 = []
+    for i in range(len(v_pitch)-2):
+        # vp_delta1.append(abs(v_pitch[i]-v_pitch[i+2]))
+        if ( v_pitch[i+2] - v_pitch[i] ) > -30:
+            vp_delta1.append(abs(v_pitch[i]-v_pitch[i+2]))
+        else:
+            vp_delta1.append(0)
+
+    vp_peaks, _ = find_peaks(vp_delta1, height=1, distance=4)
+    vp_peaks = vp_peaks + 1
+
+
+    # ee-method
+    ee_peaks, _ = find_peaks(-energy_entp, height=-5.0, prominence=0.1, distance=3) 
+    ee_peaks = ee_peaks + 1
+
+
+    # sf-method
     # value for prominence
     p = 0.016 #high score : 0.245 w/ 0.02425
 
     # values for height
     h = 0.02288 #high score : 0.266 w/ 0.02288
-    low = spectral_flux[int(len(spectral_flux)*0.13)] #high score : 0.261
+    # low = spectral_flux[int(len(spectral_flux)*0.13)] #high score : 0.261
     
     # high score : 0.269 w/ p = 0.016 and h = 0.02288
+    sf_peaks, _ = find_peaks(spectral_flux, height=0.015, prominence=0.01, distance=3) #use prominence= or height= or both
+    sf_peaks = sf_peaks - 1
 
-    # print(p)
-    # print(h)
-    # print(low)
+   
+    epsilon = 10 # .1 sec
+    vpsf_peaks = []
+    vp_idx = 0
+    sf_idx = 0
+    while vp_idx < len(vp_peaks):
+        while sf_idx < len(sf_peaks) and sf_peaks[sf_idx] <= vp_peaks[vp_idx]+epsilon:
+            if abs(sf_peaks[sf_idx] - vp_peaks[vp_idx]) > epsilon:
+                vpsf_peaks.append(sf_peaks[sf_idx])
+            sf_idx += 1
+        vpsf_peaks.append(vp_peaks[vp_idx])
+        vp_idx += 1
 
-    # sf_peaks, _ = find_peaks(spectral_flux, height=h, prominence=p) #use prominence= or height= or both
-    # peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.2) 
-    peaks, _ = find_peaks(-energy_entp, height=-3.3, prominence=0.1, distance=3) 
-
-    # peaks = []
-    # for sf in sf_peaks:
-    #     peaks.append(sf)
-    # for ee in ee_peaks:
-    #     peaks.append(ee)    
-    # peaks.sort()
-    
-    # for i in range(len(peaks)-1):
-    #     if i >=  len(peaks) - 1:
-    #         break
-    #     if peaks[i+1] - peaks[i] <= 3:
-    #         peaks[i] = (peaks[i] + peaks[i+1])/2
-    #         peaks.remove(peaks[i+1])
-    #         i -= 1
+    peaks = []
+    ee_idx = 0
+    vpsf_idx = 0
+    while ee_idx < len(ee_peaks):
+        while vpsf_idx < len(vpsf_peaks) and vpsf_peaks[vpsf_idx] <= ee_peaks[ee_idx]+epsilon:
+            if abs(vpsf_peaks[vpsf_idx] - ee_peaks[ee_idx]) > epsilon:
+                peaks.append(vpsf_peaks[vpsf_idx])
+            vpsf_idx += 1
+        peaks.append(ee_peaks[ee_idx])
+        ee_idx += 1
 
     onset_times = []
     onset_idxs = []
-    delta = 2
+    delta = 0
+    # delta = 2  0.2437
+    # for i in range(len(peaks)):
+    #     if int(peaks[i])+delta >= 0 and int(peaks[i])+delta < len(time):
+    #         onset_times.append(time[int(peaks[i])+delta])
+    #         onset_idxs.append(int(peaks[i]+delta))
+    #     else:
+    #         onset_times.append(time[int(peaks[i])])
+    #         onset_idxs.append(int(peaks[i]))
     for i in range(len(peaks)):
-        if int(peaks[i])+delta >= 0 and int(peaks[i])+delta < len(time):
-            onset_times.append(time[int(peaks[i])+delta])
-            onset_idxs.append(int(peaks[i]+delta))
-        else:
-            onset_times.append(time[int(peaks[i])])
-            onset_idxs.append(int(peaks[i]))
+        onset_times.append(time[int(peaks[i])])
+        onset_idxs.append(int(peaks[i]))
 
     return onset_times, onset_idxs
 
@@ -193,7 +220,7 @@ if __name__ == '__main__':
     # feature_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"
     # answer = main(ep_path=ep_path, feature_path=feature_path)
     # for note in answer:
-    #     print(note[0], note[1], note[2], sep=' ')
+        # print(note[0], note[1], note[2], sep=' ')
     
     # for generate answer
     AnswerDict = {}
