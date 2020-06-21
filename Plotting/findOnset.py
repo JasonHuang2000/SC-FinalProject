@@ -23,12 +23,12 @@ def main(feature_path):
     vp_peaks, _ = find_peaks(vp_delta1, height=0.5, distance=4)
 
     # ee-method
-    ee_peaks, _ = find_peaks(-energy_entp, height=-5.0, prominence=0.1, distance=3) 
-    ee_peaks = ee_peaks + 1
+    ee_peaks, _ = find_peaks(-energy_entp, height=-3.1, prominence=0.1, distance=3) 
+    # ee_peaks = ee_peaks
 
     # sf-method
-    sf_peaks, _ = find_peaks(spectral_flux, height=0.015, prominence=0.01, distance=3) #use prominence= or height= or both
-    sf_peaks = sf_peaks - 1
+    sf_peaks, _ = find_peaks(spectral_flux, height=0.03, prominence=0.01, distance=3) #use prominence= or height= or both
+    # sf_peaks = sf_peaks
 
     vp_onset = []
     ee_onset = []

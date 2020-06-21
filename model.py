@@ -29,6 +29,12 @@ def isEmptyNote(peaks, v_pitch, idx):
             return False
     return True
 
+def isNoteEnding(peaks, vp_delta2, idx):
+    for i in range(-5, 6):
+        if (idx + i) >= 0 and (idx + i) < len(vp_delta2) and vp_delta2[idx+i] < -30:
+            return True
+    return False
+
 def get_onset(feature):
     time = feature['time']
     spectral_flux = np.array(feature['spectral_flux'])
@@ -37,22 +43,22 @@ def get_onset(feature):
 
     # # vp-method
 
-    vp_delta1 = []
-    for i in range(len(v_pitch)-1):
-        # vp_delta1.append(abs(v_pitch[i]-v_pitch[i+2]))
-        if ( v_pitch[i+1] - v_pitch[i] ) > -30:
-            vp_delta1.append(abs(v_pitch[i]-v_pitch[i+1]))
-        else:
-            vp_delta1.append(0)
+    # vp_delta1 = []
+    # vp_delta2 = []
+    # for i in range(len(v_pitch)-1):
+    #     vp_delta2.append(v_pitch[i+1] - v_pitch[i])
+    #     if ( v_pitch[i+1] - v_pitch[i] ) > -30:
+    #         vp_delta1.append(abs(v_pitch[i]-v_pitch[i+1]))
+    #     else:
+    #         vp_delta1.append(0)
 
-    print(vp_delta1[1875:1975])
-    peaks, _ = find_peaks(vp_delta1, height=0.5, distance=4)
+    # peaks, _ = find_peaks(vp_delta1, height=0.5, distance=4)
     # vp_peaks = vp_peaks + 1
 
 
     # ee-method
-    # ee_peaks, _ = find_peaks(-energy_entp, height=-5.0, prominence=0.1, distance=10) 
-    # ee_peaks = ee_peaks + 1
+    # peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.2) Test-set best
+    peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.18, distance=3) 
 
 
     # sf-method
@@ -121,6 +127,7 @@ def get_onset(feature):
 
     onset_times = []
     onset_idxs = []
+    # delta = 2 # test-set best
     delta = 1
 
     # for i in range(len(peaks)):
@@ -140,9 +147,10 @@ def get_onset(feature):
             onset_times.append(time[int(peaks[i])])
             onset_idxs.append(int(peaks[i]))
 
-    # for i in range(len(peaks)):
-    #     onset_times.append(time[int(peaks[i])])
-    #     onset_idxs.append(int(peaks[i]))
+    # for i in range(len(ee_peaks)):
+    #     # if isNoteEnding(ee_peaks, vp_delta2, i) == False:
+    #     onset_times.append(time[int(ee_peaks[i])])
+    #     onset_idxs.append(int(ee_peaks[i]))
 
     return onset_times, onset_idxs
 
@@ -184,44 +192,45 @@ def get_note_level_pitch(notes):
         # median method
         v_note = []
 
+        # for i in range(5, len(note.frame_pitch)-4):
         for i in range(len(note.frame_pitch)):
-            if note.frame_pitch[i] > 0:
+            if note.frame_pitch[i] > 5:
                 voiced_note= voiced_note+ 1
                 # total= total+ note.frame_pitch[i]
 
-                v_note.append(note.frame_pitch[i])
+                # v_note.append(note.frame_pitch[i])
+                v_note.append(int(note.frame_pitch[i]))
 
         if voiced_note == 0:
             note.pitch= 0
         else:
             # note.pitch= round( total / float(voiced_note) ) #comment this to use median method
 
-            note.pitch = round(median(v_note))
+            # note.pitch = round(median(v_note))
+
+            note.pitch = int(stats.mode(v_note)[0][0]) + 1
 
     return notes
 
 def get_offset(notes, feature):
 
     # for note in notes:
-        # if note.pitch != 0:
-
-            # for i in range(len(note.frame_pitch)):
-            #     if note.frame_pitch[i] > 0:
-            #         offset= i
-            
-            # if offset > 2:
-                # note.offset_time= note.frame[offset]
+    #     if note.pitch != 0:
+    #         for i in range(len(note.frame_pitch)):
+    #             if note.frame_pitch[i] > 0:
+    #                 offset= i
+    #         if offset > 2:
+    #             note.offset_time= note.frame[offset]
 
     # spectral_entropy offset-method
-    s_etp = feature["spectral_entropy"]
 
+    s_etp = feature["spectral_entropy"]
     for note in notes:
         offset = 0
         for i in range(note.onset_idx, note.onset_idx+len(note.frame_pitch)-1):
             if i > 5 and s_etp[i] >= 0.65:
                 break
             offset += 1
-
         if offset > 2:
             note.offset_time= note.frame[offset]
             note.offset_idx = offset
@@ -260,20 +269,20 @@ if __name__ == '__main__':
 
     # for testing
 
-    ep_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_vocal.json"
-    feature_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"
-    answer = main(ep_path=ep_path, feature_path=feature_path)
-    for note in answer:
-        print(note[0], note[1], note[2], sep=' ')
+    # ep_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_vocal.json"
+    # feature_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"
+    # answer = main(ep_path=ep_path, feature_path=feature_path)
+    # for note in answer:
+    #     print(note[0], note[1], note[2], sep=' ')
     
     # for generate answer
 
-    # AnswerDict = {}
-    # for i in range(1, 1501):
-    #     ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
-    #     feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
-    #     ans = main(ep_path=ep_path, feature_path=feature_path)
-    #     AnswerDict[str(i)] = ans
-    # print(json.dumps(AnswerDict))
-    # AnswerDict.clear()
+    AnswerDict = {}
+    for i in range(1, 1501):
+        ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
+        feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
+        ans = main(ep_path=ep_path, feature_path=feature_path)
+        AnswerDict[str(i)] = ans
+    print(json.dumps(AnswerDict))
+    AnswerDict.clear()
 

@@ -85,7 +85,21 @@ def main(features, gt_onset, gt_offset, gt_pitch):
         if t > time[start]:
             onset.vlines(t, 0, 1, linestyles='dashed')
 
+    offset = ax1.twinx()
+    for t in gt_offset:
+        if t >= time[end]:
+            break
+        if t > time[start]:
+            offset.vlines(t, 0, 1, linestyles='dashed', color='tab:green')
+
+    for i in range(len(gt_pitch)):
+        if gt_offset[i] >= time[end]:
+            break
+        if gt_onset[i] > time[start]:
+            ax1.hlines(gt_pitch[i], gt_onset[i], gt_offset[i], linestyles='dashed', color='c')
+
     onset.set_yticklabels([])
+    offset.set_yticklabels([])
 
     fig.tight_layout()
     plt.show()

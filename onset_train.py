@@ -32,16 +32,21 @@ def get_onset(feature, h, p, d):
     spectral_flux = np.array(feature['spectral_flux'])
     energy_entp = np.array(feature['energy_entropy'])
 
-    if d == 0:
-        peaks, _ = find_peaks(-energy_entp, height=h, prominence=p) 
-    else:
-        peaks, _ = find_peaks(-energy_entp, height=h, prominence=p, distance=d) 
+    peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.18, distance=3) 
+    # peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.2) 
 
     onset_times = []
     onset_idxs = []
+    delta = 1
+    # delta = 2
+
     for i in range(len(peaks)):
-        onset_times.append(time[int(peaks[i])])
-        onset_idxs.append(int(peaks[i]))
+        if int(peaks[i])+delta >= 0 and int(peaks[i])+delta < len(time):
+            onset_times.append(time[int(peaks[i])+delta])
+            onset_idxs.append(int(peaks[i]+delta))
+        else:
+            onset_times.append(time[int(peaks[i])])
+            onset_idxs.append(int(peaks[i]))
 
     return onset_times, onset_idxs
 
@@ -86,16 +91,22 @@ def get_note_level_pitch(notes):
         for i in range(len(note.frame_pitch)):
             if note.frame_pitch[i] > 0:
                 voiced_note= voiced_note+ 1
-                # total= total+ note.frame_pitch[i]
+                total= total+ note.frame_pitch[i]
 
-                v_note.append(note.frame_pitch[i])
+                # v_note.append(note.frame_pitch[i])
+                # v_note.append(int(note.frame_pitch[i]))
+                # v_note.append(round(note.frame_pitch[i]))
 
         if voiced_note == 0:
             note.pitch= 0
         else:
-            # note.pitch= round( total / float(voiced_note) ) #comment this to use median method
+            note.pitch= round( total / float(voiced_note) ) #comment this to use median method
 
-            note.pitch = round(median(v_note))
+            # note.pitch = round(median(v_note))
+
+            # note.pitch = int(stats.mode(v_note)[0][0]) + 1
+
+            # note.pitch = int(stats.mode(v_note)[0][0])
 
     return notes
 
@@ -159,30 +170,23 @@ def main(ep_path, feature_path, h, p, d):
 
 if __name__ == '__main__':
 
-    best = [0, 0, 0]
-    best_score = 0
+    h = 0
+    p = 0
+    d = 0
+    total = 0
+    for i in range(1, 501):
+        ep_path = "MIR-ST500/" + str(i) + "/" + str(i) + "_vocal.json" 
+        feature_path = "MIR-ST500/" + str(i) + "/" + str(i) + "_feature.json" 
+        est_intervals, est_pitches = main(ep_path, feature_path, h, p, d)
 
-    for _h in range(20, 40):
-        for _p in range(15):
-            for d in range(10):
-                h = -(_h/10)
-                p = _p/10
-                total_score = 0
-                for i in range(1, 501):
-                    ep_path = "MIR-ST500/" + str(i) + "/" + str(i) + "_vocal.json" 
-                    feature_path = "MIR-ST500/" + str(i) + "/" + str(i) + "_feature.json" 
-                    est_intervals, est_pitches = main(ep_path, feature_path, h, p, d)
+        ref_intervals, ref_pitches = mir.io.load_valued_intervals("MIR-ST500/" + str(i) + "/" + str(i) + "_groundtruth.txt")
+        scores = mir.transcription.evaluate(ref_intervals, ref_pitches, est_intervals, est_pitches)
 
-                    ref_intervals, ref_pitches = mir.io.load_valued_intervals("MIR-ST500/" + str(i) + "/" + str(i) + "_groundtruth.txt")
-                    scores = mir.transcription.evaluate(ref_intervals, ref_pitches, est_intervals, est_pitches)
+        s = scores['Onset_F-measure']*0.2 + scores['F-measure_no_offset']*0.6 + scores['F-measure']*0.2
+        total += s
+        print(i, end='\r')
 
-                    s = scores['Onset_F-measure']*0.2 + scores['F-measure_no_offset']*0.6 + scores['F-measure']*0.2
-                    print(i, s)
-                    if s > best_score:
-                        best_score = s
-                        best = [h, p, d]
-
-    print("Best: " + str(best))
+    print(total/500)
 
 
                         

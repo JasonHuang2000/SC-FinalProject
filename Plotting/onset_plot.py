@@ -40,15 +40,16 @@ def main(features, gt_onset, gt_offset, gt_pitch, onset_peaks):
                 onset.vlines(t, 0, 1)
 
     flag = 0
-    for t in vp:
-        if t >= time[end]:
+    # print(vp)
+    for i in range(len(vp)):
+        if vp[i] >= time[end]:
             break
-        if t > time[start]:
+        if vp[i] > time[start]:
             if flag == 0:
-                onset.vlines(t, 0, 1, colors='r', linestyles='dashed', label='vocal_pitch')
+                onset.vlines(vp[i], 0, 1, colors='r', linestyles='dashed', label='vocal_pitch')
                 flag = 1
             else:
-                onset.vlines(t, 0, 1, colors='r', linestyles='dashed')
+                onset.vlines(vp[i], 0, 1, colors='r', linestyles='dashed')
 
     flag = 0
     for t in ee:
@@ -56,10 +57,10 @@ def main(features, gt_onset, gt_offset, gt_pitch, onset_peaks):
             break
         if t > time[start]:
             if flag == 0:
-                onset.vlines(t, 0, 1, colors='g', linestyles='dashed', label='energy_entropy')
+                onset.vlines(t, 0, 1, colors='g', linestyles='dashdot', label='energy_entropy')
                 flag = 1
             else:
-                onset.vlines(t, 0, 1, colors='g', linestyles='dashed')
+                onset.vlines(t, 0, 1, colors='g', linestyles='dashdot')
 
     flag = 0
     for t in sf:
@@ -67,10 +68,10 @@ def main(features, gt_onset, gt_offset, gt_pitch, onset_peaks):
             break
         if t > time[start]:
             if flag == 0:
-                onset.vlines(t, 0, 1, colors='b', linestyles='dashed', label='spectral_entropy')
+                onset.vlines(t, 0, 1, colors='b', linestyles='dotted', label='spectral_entropy')
                 flag = 1
             else:
-                onset.vlines(t, 0, 1, colors='b', linestyles='dashed')
+                onset.vlines(t, 0, 1, colors='b', linestyles='dotted')
 
     onset.set_yticklabels([])
     fig.legend()
