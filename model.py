@@ -1,8 +1,6 @@
-import argparse
 import os
 import sys
 import librosa
-import mido
 import json
 import numpy as np
 from scipy import stats
@@ -25,6 +23,11 @@ class Note:
         self.pitch = 0
         self.offset_idx = 0
 
+def isEmptyNote(peaks, v_pitch, idx):
+    for i in range(-5, 6):
+        if (idx + i) >= 0 and (idx + i) < len(v_pitch) and v_pitch[idx+i] < 1:
+            return False
+    return True
 
 def get_onset(feature):
     time = feature['time']
@@ -32,22 +35,24 @@ def get_onset(feature):
     energy_entp = np.array(feature['energy_entropy'])
     v_pitch = feature['vocal_pitch']
 
-    # vp-method
+    # # vp-method
+
     vp_delta1 = []
-    for i in range(len(v_pitch)-2):
+    for i in range(len(v_pitch)-1):
         # vp_delta1.append(abs(v_pitch[i]-v_pitch[i+2]))
-        if ( v_pitch[i+2] - v_pitch[i] ) > -30:
-            vp_delta1.append(abs(v_pitch[i]-v_pitch[i+2]))
+        if ( v_pitch[i+1] - v_pitch[i] ) > -30:
+            vp_delta1.append(abs(v_pitch[i]-v_pitch[i+1]))
         else:
             vp_delta1.append(0)
 
-    vp_peaks, _ = find_peaks(vp_delta1, height=1, distance=4)
-    vp_peaks = vp_peaks + 1
+    print(vp_delta1[1875:1975])
+    peaks, _ = find_peaks(vp_delta1, height=0.5, distance=4)
+    # vp_peaks = vp_peaks + 1
 
 
     # ee-method
-    ee_peaks, _ = find_peaks(-energy_entp, height=-5.0, prominence=0.1, distance=3) 
-    ee_peaks = ee_peaks + 1
+    # ee_peaks, _ = find_peaks(-energy_entp, height=-5.0, prominence=0.1, distance=10) 
+    # ee_peaks = ee_peaks + 1
 
 
     # sf-method
@@ -59,47 +64,85 @@ def get_onset(feature):
     # low = spectral_flux[int(len(spectral_flux)*0.13)] #high score : 0.261
     
     # high score : 0.269 w/ p = 0.016 and h = 0.02288
-    sf_peaks, _ = find_peaks(spectral_flux, height=0.015, prominence=0.01, distance=3) #use prominence= or height= or both
-    sf_peaks = sf_peaks - 1
+    # sf_peaks, _ = find_peaks(spectral_flux, height=0.015, prominence=0.01, distance=3) #use prominence= or height= or both
+    # sf_peaks = sf_peaks - 1
 
    
-    epsilon = 10 # .1 sec
-    vpsf_peaks = []
-    vp_idx = 0
-    sf_idx = 0
-    while vp_idx < len(vp_peaks):
-        while sf_idx < len(sf_peaks) and sf_peaks[sf_idx] <= vp_peaks[vp_idx]+epsilon:
-            if abs(sf_peaks[sf_idx] - vp_peaks[vp_idx]) > epsilon:
-                vpsf_peaks.append(sf_peaks[sf_idx])
-            sf_idx += 1
-        vpsf_peaks.append(vp_peaks[vp_idx])
-        vp_idx += 1
+    # epsilon = 15 # .1 sec
+    # vpsf_peaks = []
+    # vp_idx = 0
+    # sf_idx = 0
 
-    peaks = []
-    ee_idx = 0
-    vpsf_idx = 0
-    while ee_idx < len(ee_peaks):
-        while vpsf_idx < len(vpsf_peaks) and vpsf_peaks[vpsf_idx] <= ee_peaks[ee_idx]+epsilon:
-            if abs(vpsf_peaks[vpsf_idx] - ee_peaks[ee_idx]) > epsilon:
-                peaks.append(vpsf_peaks[vpsf_idx])
-            vpsf_idx += 1
-        peaks.append(ee_peaks[ee_idx])
-        ee_idx += 1
+    # while vp_idx < len(vp_peaks):
+    #     flag = 0
+    #     while sf_idx < len(sf_peaks) and sf_peaks[sf_idx] <= vp_peaks[vp_idx]+epsilon:
+    #         if abs(sf_peaks[sf_idx] - vp_peaks[vp_idx]) <= epsilon:
+    #             vpsf_peaks.append(vp_peaks[vp_idx])
+    #             flag = 1
+    #             sf_idx += 1
+    #             break
+    #         sf_idx += 1
+    #     if flag == 0:
+    #         vpsf_peaks.append(vp_peaks[vp_idx])
+    #     vp_idx += 1
+
+    # while vp_idx < len(vp_peaks):
+    #     while sf_idx < len(sf_peaks) and sf_peaks[sf_idx] <= vp_peaks[vp_idx]+epsilon:
+    #         if abs(sf_peaks[sf_idx] - vp_peaks[vp_idx]) > epsilon:
+    #             vpsf_peaks.append(sf_peaks[sf_idx])
+    #         sf_idx += 1
+    #     vpsf_peaks.append(vp_peaks[vp_idx])
+    #     vp_idx += 1
+
+    # peaks = []
+    # ee_idx = 0
+    # vpsf_idx = 0
+
+    # while ee_idx < len(ee_peaks):
+    #     flag = 0
+    #     while vpsf_idx < len(vpsf_peaks) and vpsf_peaks[vpsf_idx] <= ee_peaks[ee_idx]+epsilon:
+    #         if abs(vpsf_peaks[vpsf_idx] - ee_peaks[ee_idx]) <= epsilon:
+    #             peaks.append(ee_peaks[ee_idx])
+    #             flag = 1
+    #             vpsf_idx += 1
+    #             break
+    #         vpsf_idx += 1
+    #     if flag == 0:
+    #         peaks.append(ee_peaks[ee_idx])
+    #     ee_idx += 1
+
+    # while ee_idx < len(ee_peaks):
+    #     while vpsf_idx < len(vpsf_peaks) and vpsf_peaks[vpsf_idx] <= ee_peaks[ee_idx]+epsilon:
+    #         if abs(vpsf_peaks[vpsf_idx] - ee_peaks[ee_idx]) > epsilon:
+    #             peaks.append(vpsf_peaks[vpsf_idx])
+    #         vpsf_idx += 1
+    #     peaks.append(ee_peaks[ee_idx])
+    #     ee_idx += 1
 
     onset_times = []
     onset_idxs = []
-    delta = 0
-    # delta = 2  0.2437
+    delta = 1
+
     # for i in range(len(peaks)):
-    #     if int(peaks[i])+delta >= 0 and int(peaks[i])+delta < len(time):
-    #         onset_times.append(time[int(peaks[i])+delta])
-    #         onset_idxs.append(int(peaks[i]+delta))
-    #     else:
-    #         onset_times.append(time[int(peaks[i])])
-    #         onset_idxs.append(int(peaks[i]))
+    #     if isEmptyNote(peaks, v_pitch, i) == False:
+    #         if int(peaks[i])+delta >= 0 and int(peaks[i])+delta < len(time):
+    #             onset_times.append(time[int(peaks[i])+delta])
+    #             onset_idxs.append(int(peaks[i]+delta))
+    #         else:
+    #             onset_times.append(time[int(peaks[i])])
+    #             onset_idxs.append(int(peaks[i]))
+
     for i in range(len(peaks)):
-        onset_times.append(time[int(peaks[i])])
-        onset_idxs.append(int(peaks[i]))
+        if int(peaks[i])+delta >= 0 and int(peaks[i])+delta < len(time):
+            onset_times.append(time[int(peaks[i])+delta])
+            onset_idxs.append(int(peaks[i]+delta))
+        else:
+            onset_times.append(time[int(peaks[i])])
+            onset_idxs.append(int(peaks[i]))
+
+    # for i in range(len(peaks)):
+    #     onset_times.append(time[int(peaks[i])])
+    #     onset_idxs.append(int(peaks[i]))
 
     return onset_times, onset_idxs
 
@@ -216,20 +259,21 @@ def main(ep_path, feature_path):
 if __name__ == '__main__':
 
     # for testing
-    # ep_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_vocal.json"
-    # feature_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"
-    # answer = main(ep_path=ep_path, feature_path=feature_path)
-    # for note in answer:
-        # print(note[0], note[1], note[2], sep=' ')
+
+    ep_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_vocal.json"
+    feature_path= "MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"
+    answer = main(ep_path=ep_path, feature_path=feature_path)
+    for note in answer:
+        print(note[0], note[1], note[2], sep=' ')
     
     # for generate answer
-    AnswerDict = {}
-    for i in range(1, 1501):
-        ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
-        feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
-        ans = main(ep_path=ep_path, feature_path=feature_path)
-        AnswerDict[str(i)] = ans
 
-    print(json.dumps(AnswerDict))
-    AnswerDict.clear()
+    # AnswerDict = {}
+    # for i in range(1, 1501):
+    #     ep_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_vocal.json"
+    #     feature_path = "AIcup_testset_ok/" + str(i) + "/" + str(i) + "_feature.json"
+    #     ans = main(ep_path=ep_path, feature_path=feature_path)
+    #     AnswerDict[str(i)] = ans
+    # print(json.dumps(AnswerDict))
+    # AnswerDict.clear()
 

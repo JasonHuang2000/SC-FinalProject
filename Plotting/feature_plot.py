@@ -18,7 +18,7 @@ def readgt(gt_fp):
 def main(features, gt_onset, gt_offset, gt_pitch):
 
     start = int(int(sys.argv[2])/0.032)
-    end = start + 150
+    end = start + 100
 
     fig, ax1 = plt.subplots(figsize=(12.5,6))
 
@@ -93,8 +93,8 @@ def main(features, gt_onset, gt_offset, gt_pitch):
 
 if __name__ == "__main__":
     # train-set
-    features = json.load(open("MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"))
-    gt_fp = open("MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_groundtruth.txt")
+    features = json.load(open("../MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"))
+    gt_fp = open("../MIR-ST500/" + sys.argv[1] + "/" + sys.argv[1] + "_groundtruth.txt")
     gt_onset, gt_offset, gt_pitch = readgt(gt_fp)
     # test set
     # features = json.load(open("AIcup_testset_ok/" + sys.argv[1] + "/" + sys.argv[1] + "_feature.json"))
