@@ -57,8 +57,7 @@ def get_onset(feature):
 
 
     # ee-method
-    # peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.2) Test-set best
-    peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.18, distance=3) 
+    peaks, _ = find_peaks(-energy_entp, height=-3.2, prominence=0.1, distance=3) 
 
 
     # sf-method
@@ -127,8 +126,7 @@ def get_onset(feature):
 
     onset_times = []
     onset_idxs = []
-    # delta = 2 # test-set best
-    delta = 1
+    delta = 2
 
     # for i in range(len(peaks)):
     #     if isEmptyNote(peaks, v_pitch, i) == False:
@@ -192,45 +190,44 @@ def get_note_level_pitch(notes):
         # median method
         v_note = []
 
-        # for i in range(5, len(note.frame_pitch)-4):
         for i in range(len(note.frame_pitch)):
-            if note.frame_pitch[i] > 5:
+            if note.frame_pitch[i] > 0:
                 voiced_note= voiced_note+ 1
                 # total= total+ note.frame_pitch[i]
 
-                # v_note.append(note.frame_pitch[i])
-                v_note.append(int(note.frame_pitch[i]))
+                v_note.append(note.frame_pitch[i])
 
         if voiced_note == 0:
             note.pitch= 0
         else:
             # note.pitch= round( total / float(voiced_note) ) #comment this to use median method
 
-            # note.pitch = round(median(v_note))
-
-            note.pitch = int(stats.mode(v_note)[0][0]) + 1
+            note.pitch = round(median(v_note))
 
     return notes
 
 def get_offset(notes, feature):
 
     # for note in notes:
-    #     if note.pitch != 0:
-    #         for i in range(len(note.frame_pitch)):
-    #             if note.frame_pitch[i] > 0:
-    #                 offset= i
-    #         if offset > 2:
-    #             note.offset_time= note.frame[offset]
+        # if note.pitch != 0:
+
+            # for i in range(len(note.frame_pitch)):
+            #     if note.frame_pitch[i] > 0:
+            #         offset= i
+            
+            # if offset > 2:
+                # note.offset_time= note.frame[offset]
 
     # spectral_entropy offset-method
-
     s_etp = feature["spectral_entropy"]
+
     for note in notes:
         offset = 0
         for i in range(note.onset_idx, note.onset_idx+len(note.frame_pitch)-1):
             if i > 5 and s_etp[i] >= 0.65:
                 break
             offset += 1
+
         if offset > 2:
             note.offset_time= note.frame[offset]
             note.offset_idx = offset
